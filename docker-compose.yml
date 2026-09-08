@@ -1,0 +1,18 @@
+services:
+  bilibili-ai-agent:
+    build: .
+    container_name: bilibili-ai-agent
+    ports:
+      - "8000:8000"
+    volumes:
+      # 代码挂载（改代码只需重启）
+      - ./backend:/app/backend
+      - ./frontend:/app/frontend
+      # 下载目录持久化
+      - ./downloads:/app/downloads
+      # Cookie 文件持久化
+      - ./cookie.txt:/app/cookie.txt
+    # 密钥从被 gitignore 的 backend/.env 注入，不写明文进 compose / 镜像
+    env_file:
+      - ./backend/.env
+    restart: unless-stopped

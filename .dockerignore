@@ -1,0 +1,8 @@
+# 密钥文件不进入镜像（本地由 backend/.env 提供，运行时由 compose env_file 注入）
+.env
+backend/.env
+
+# Python 缓存
+__pycache__/
+*.pyc
+*.pyo
