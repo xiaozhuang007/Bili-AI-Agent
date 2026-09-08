@@ -158,7 +158,8 @@
     </div>
 
     <script>
-        let history = [];
+        // 前端生成 session_id，每次打开页面就是一个新会话
+        const sessionId = crypto.randomUUID();
         const chatEl = document.getElementById('chat');
         const inputEl = document.getElementById('input');
         const sendBtn = document.getElementById('sendBtn');
@@ -206,12 +207,11 @@
                 const resp = await fetch('/api/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: msg, history: history })
+                    body: JSON.stringify({ message: msg, session_id: sessionId })
                 });
                 const data = await resp.json();
                 removeTyping();
                 addMessage('assistant', data.reply);
-                history = data.history;
             } catch (e) {
                 removeTyping();
                 addMessage('assistant', 'Error: ' + e.message);
