@@ -9,6 +9,7 @@ B站视频智能下载助手 —— 用自然语言下载B站视频的 Agent Web
 - **对话式下载**：发送B站链接 + 自然语言，Agent 自动下载
 - **智能状态查询**：问"下载好了吗"、"我下了哪些视频"，Agent 直接回答
 - **Cookie 管理**：对话中检测 Cookie 状态、提示更新
+- **文件级 Cookie 检测/转换**：把浏览器导出的 Cookie 文件放进 `cookie_imports/`，Agent 自动识别格式（Netscape/浏览器字符串/JSON）、检测关键字段、**实测登录态**，一键转换为可用格式并生效
 - **视频信息查询**：发送链接，Agent 返回标题/UP主/时长等信息
 - **多轮对话记忆**：Agent 记住上下文，支持连续追问
 
@@ -43,8 +44,10 @@ bilibili-ai-agent/
 │       └── agent_tools.py   # LangChain @tool 定义
 ├── frontend/
 │   └── index.html           # 对话界面
+├── cookie_imports/          # 用户导出 Cookie 文件的共享目录（挂载进容器）
+├── shared/                  # 通用共享目录（挂载进容器，可给 Agent 读任意文件）
 ├── downloads/               # 下载文件目录
-├── cookie.txt               # Cookie 文件
+├── cookie.txt               # 生效 Cookie 文件（由 Agent 维护）
 ├── Dockerfile
 ├── docker-compose.yml
 ├── requirements.txt
@@ -77,8 +80,11 @@ python main.py
 | get_download_status | 查询下载进度 |
 | list_downloads | 列出已下载文件 |
 | get_video_info | 获取视频信息 |
-| check_cookie_status | 检查 Cookie 状态 |
-| update_cookie | 更新 Cookie |
+| check_cookie_status | 检查当前生效 Cookie 状态 |
+| update_cookie | 粘贴内容更新 Cookie |
+| read_file | 读取共享目录中的文件（安全白名单） |
+| check_cookie_file | 检测 Cookie 文件可用性（格式+字段+实测登录） |
+| convert_cookie_file | 转换 Cookie 文件为 Netscape 并设为生效 |
 | list_all_tasks | 列出所有下载任务 |
 
 ## 对话示例
@@ -96,10 +102,20 @@ Agent：你最近下载了 35 个视频，最新的是：1. xxx（120MB）...
 
 ## Cookie 说明
 
-部分B站视频需要登录才能下载。Cookie 支持两种格式：
+部分B站视频需要登录才能下载。Cookie 支持三种格式，Agent 自动识别：
 
-- **Netscape 格式**：浏览器插件导出
+- **Netscape 格式**：yt-dlp 标准格式，开箱即用
 - **浏览器字符串格式**：`name=value; name2=value2; ...`（自动转换）
+- **JSON 格式**：EditThisCookie / Cookie-Editor 等浏览器扩展导出的数组格式（自动转换）
+
+### 文件级检测/转换流程
+
+1. 浏览器扩展导出 Cookie 文件 → 放入 `cookie_imports/` 目录
+2. 对话中告诉 Agent 文件名（如 `帮我检测 99.json`）
+3. Agent 检测：格式识别 → 关键字段检查 → 过期时间 → **实测登录态**（请求 B站 API）
+4. 需要时让 Agent 转换：输出 Netscape 副本 `xxx_netscape.txt` + 设为当前生效 Cookie
+
+> 原始文件永远不会被修改；Cookie 含敏感凭据，已通过 .gitignore 排除，不会上传。
 
 ## License
 

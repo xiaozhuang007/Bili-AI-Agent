@@ -12,6 +12,10 @@ services:
       - ./downloads:/app/downloads
       # Cookie 文件持久化
       - ./cookie.txt:/app/cookie.txt
+      # 共享目录：用户把待检测/转换的 cookie 文件放进 cookie_imports/
+      # 任意想给 Agent 读的文件放进 shared/（挂载后才能被容器内 Agent 看到）
+      - ./cookie_imports:/app/cookie_imports
+      - ./shared:/app/shared
     # 密钥从被 gitignore 的 backend/.env 注入，不写明文进 compose / 镜像
     env_file:
       - ./backend/.env
